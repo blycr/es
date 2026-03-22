@@ -377,6 +377,35 @@ body[data-theme="dark"] .hero-card {
   margin-top: 12px;
 }
 
+.preview-toolbar {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.upload-toolbar,
+.preview-toolbar .stack {
+  min-width: 0;
+  width: 100%;
+}
+
+.upload-toolbar {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.upload-toolbar .stack,
+.preview-toolbar .stack {
+  min-width: 0;
+  width: 100%;
+}
+
+.upload-toolbar-actions,
+.preview-toolbar-actions {
+  margin-top: 10px;
+}
+
 .stack {
   display: grid;
   gap: 8px;
@@ -440,13 +469,21 @@ body[data-theme="dark"] .hero-card {
 }
 
 .file-row {
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: 12px;
 }
 
 .file-main {
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.file-checkbox {
+  grid-row: 1 / span 2;
+  align-self: start;
+  margin-top: 0.9rem;
 }
 
 .file-name-input {
@@ -467,6 +504,8 @@ textarea:focus {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  grid-column: 2;
+  justify-self: start;
 }
 
 .file-meta,
@@ -726,6 +765,11 @@ textarea:focus {
     align-items: stretch;
   }
 
+  .upload-toolbar-actions,
+  .preview-toolbar-actions {
+    margin-top: 12px;
+  }
+
   .stack,
   .stack.grow,
   .stack.full {
@@ -734,13 +778,7 @@ textarea:focus {
   }
 
   .file-row {
-    grid-template-columns: auto 1fr;
-    align-items: start;
-  }
-
-  .file-row .file-actions {
-    grid-column: 2;
-    justify-self: start;
+    column-gap: 10px;
   }
 
   .result-card header,

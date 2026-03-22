@@ -48,7 +48,7 @@
               <p>拖入字幕文件，或点击选择</p>
               <span>建议 UTF-8；如乱码可切换 `GBK` / `Big5` 重新解码</span>
             </div>
-            <div class="toolbar">
+            <div class="upload-toolbar">
               <label class="stack">
                 <span>导入编码</span>
                 <select id="encoding-select">
@@ -59,10 +59,12 @@
                   <option value="utf-16le">UTF-16 LE</option>
                 </select>
               </label>
+            </div>
+            <div class="toolbar upload-toolbar-actions">
               <button id="reload-encoding" class="ghost">按当前编码重新解码所有文件</button>
               <button id="remove-selected-files" class="ghost">删除所选文件</button>
               <button id="clear-files" class="ghost">清空全部文件</button>
-              <button id="load-samples" class="ghost">加载示例提示</button>
+              <button id="load-samples" class="ghost">提示</button>
             </div>
             <div id="file-list" class="file-list empty-state"><p>还没有导入文件。</p></div>
           </section>
@@ -84,11 +86,13 @@
               <h2>2. 直接编辑</h2>
               <p>选中文件后直接改内容；文件名在左侧列表内直接改，保存即反映到导出结果。</p>
             </div>
-            <div class="toolbar">
+            <div class="preview-toolbar">
               <label class="stack grow">
                 <span>当前活动文件</span>
                 <select id="active-file-select"></select>
               </label>
+            </div>
+            <div class="toolbar preview-toolbar-actions">
               <button id="preview-visual-mode" class="ghost">可视化编辑</button>
               <button id="preview-raw-mode" class="ghost">原文编辑</button>
               <button id="save-raw-editor" class="ghost">保存原文改动</button>
