@@ -1,31 +1,31 @@
-# Code of Conduct
+# 行为准则
 
-## Our Standard
+## 基本要求
 
-This project aims to keep discussions practical, respectful, and focused on improving the software.
+本项目希望讨论保持尊重、直接，并聚焦于改进软件本身。
 
-Participants are expected to:
+参与者应当：
 
-- communicate clearly and respectfully
-- assume good intent while discussing technical disagreements
-- keep feedback specific and actionable
-- avoid harassment, insults, or dismissive behavior
+- 使用清晰、尊重的表达方式
+- 在技术分歧中默认对方出于善意
+- 提供具体、可执行的反馈
+- 避免人身攻击、侮辱性表达或轻蔑态度
 
-## Unacceptable Behavior
+## 不被接受的行为
 
-Examples of unacceptable behavior include:
+以下行为不被接受：
 
-- personal attacks or derogatory language
-- repeated disruptive behavior in issues or pull requests
-- publishing private information without permission
-- harassment in public or private project spaces
+- 人身攻击或贬损性语言
+- 在 Issue 或 Pull Request 中持续制造干扰
+- 未经允许公开他人隐私信息
+- 在项目相关空间中实施骚扰行为
 
-## Maintainer Responsibility
+## 维护者职责
 
-Maintainers may edit, hide, lock, or remove comments, issues, pull requests, or other contributions that do not follow this code of conduct.
+维护者可以对不符合本准则的评论、Issue、Pull Request 或其他贡献进行编辑、隐藏、锁定或移除。
 
-## Reporting
+## 反馈方式
 
-If you experience or witness unacceptable behavior, contact the maintainer privately.
+如果你遇到或观察到不当行为，请私下联系维护者。
 
-For security-sensitive reports, use the process described in [SECURITY.md](/c:/Users/blycr/es/SECURITY.md).
+涉及安全问题时，请按 [SECURITY.md](/c:/Users/blycr/es/SECURITY.md) 中的方式反馈。

@@ -1,54 +1,55 @@
 # ASS Subtitle Studio
 
-ASS Subtitle Studio is a browser-based editor for `.ass` subtitle files.
+ASS Subtitle Studio 是一个用于编辑 `.ass` 字幕文件的浏览器端工具。
 
-It is designed for local-first editing: files stay on the user's machine, the app works when opened directly with `file://`, and common subtitle maintenance tasks can be handled without a backend.
+项目采用本地优先的使用方式：文件保留在用户本机，支持直接通过 `file://` 打开，也可以通过 GitHub Pages 等静态托管方式访问。
 
-## What It Does
+## 功能概览
 
-- Import multiple local `.ass` files
-- Re-decode files with common subtitle encodings
-- Rename output files before export
-- Edit `Script Info` and `Aegisub Project Garbage`
-- Edit `V4+ Styles` and `Events` in paged visual tables
-- Edit the full subtitle text in raw mode
-- Export individual files or download selected files as a ZIP archive
+- 批量导入本地 `.ass` 字幕文件
+- 按常见字幕编码重新解码文件
+- 在导出前修改输出文件名
+- 编辑 `Script Info` 与 `Aegisub Project Garbage`
+- 以分页表格方式编辑 `V4+ Styles` 与 `Events`
+- 以原文模式直接编辑完整字幕文本
+- 单文件导出或将所选文件打包为 ZIP 下载
 
-## Project Goals
+## 设计目标
 
-- Keep the app usable without a local server
-- Preserve a straightforward, dependency-free front end
-- Support large subtitle files without sending content to a remote service
-- Provide a practical editing workflow for metadata, styles, events, and export names
+- 不依赖后端即可完成常见字幕整理工作
+- 保持纯前端、低依赖、易维护的实现方式
+- 在处理较大字幕文件时尽量保证可用性
+- 覆盖元信息、样式、事件与导出文件名等常见编辑场景
 
-## Usage
+## 使用方式
 
-1. Open [index.html](/c:/Users/blycr/es/index.html) in a browser.
-2. Import one or more `.ass` files.
-3. Rename files or edit subtitle content in the visual or raw editor.
-4. Download the selected outputs as individual files or as a ZIP archive.
+1. 打开 [index.html](/c:/Users/blycr/es/index.html)。
+2. 导入一个或多个 `.ass` 文件。
+3. 在可视化编辑或原文编辑中修改内容。
+4. 下载单个文件或导出所选文件的 ZIP 包。
 
-## Compatibility Notes
+## 兼容性说明
 
-- Direct `file://` usage is supported.
-- The app is intended for modern desktop browsers.
-- ZIP exports use UTF-8 file names.
-- Sample subtitle files are ignored by Git and are not part of the repository.
+- 支持直接使用 `file://` 打开。
+- 建议在现代桌面浏览器中使用。
+- ZIP 导出使用 UTF-8 文件名。
+- 示例字幕文件已通过 Git 忽略规则排除，不会进入仓库。
 
-## Repository Structure
+## 仓库结构
 
-- [index.html](/c:/Users/blycr/es/index.html): application shell
-- [styles.css](/c:/Users/blycr/es/styles.css): layout and theme styles
-- [app.js](/c:/Users/blycr/es/app.js): parsing, editing, and export logic
-- [CONTRIBUTING.md](/c:/Users/blycr/es/CONTRIBUTING.md): contribution workflow
-- [SECURITY.md](/c:/Users/blycr/es/SECURITY.md): security reporting guidance
+- [index.html](/c:/Users/blycr/es/index.html)：页面结构与应用入口
+- [styles.css](/c:/Users/blycr/es/styles.css)：布局、主题与控件样式
+- [app.js](/c:/Users/blycr/es/app.js)：字幕解析、编辑与导出逻辑
+- [CONTRIBUTING.md](/c:/Users/blycr/es/CONTRIBUTING.md)：贡献说明
+- [SECURITY.md](/c:/Users/blycr/es/SECURITY.md)：安全问题反馈方式
+- [CHANGELOG.md](/c:/Users/blycr/es/CHANGELOG.md)：版本与变更记录
 
-## Development
+## 开发说明
 
-- Run `node --check app.js` before submitting changes.
-- Keep `file://` compatibility intact when changing loading behavior.
-- Prefer small, readable changes over framework-heavy abstractions.
+- 提交前运行 `node --check app.js`
+- 修改加载逻辑时保留 `file://` 兼容性
+- 优先保持实现直接、清晰、易维护
 
-## License
+## 许可证
 
-This project is licensed under the MIT License. See [LICENSE](/c:/Users/blycr/es/LICENSE).
+本项目基于 MIT License 发布，见 [LICENSE](/c:/Users/blycr/es/LICENSE)。

@@ -1,30 +1,31 @@
-# Contributing
+# 贡献说明
 
-## Setup
+## 开始之前
 
-1. Clone the repository.
-2. Open `index.html` directly in a browser, or serve the folder with any static file server.
-3. Edit `index.html`, `styles.css`, and `app.js` as needed.
+1. 克隆仓库。
+2. 直接在浏览器中打开 `index.html`，或使用任意静态文件服务运行项目。
+3. 根据需要修改 `index.html`、`styles.css` 和 `app.js`。
 
-## Guidelines
+## 贡献原则
 
-- Keep the app dependency-free unless a dependency clearly reduces complexity.
-- Preserve `file://` compatibility when changing loading behavior.
-- Prefer progressive enhancement over browser-specific features.
-- Keep UI copy concise and user-facing.
-- Do not commit local sample subtitle files or generated export archives.
-- Keep README focused on product overview, usage, and repository entry points.
-- Move implementation details and contributor-only guidance into repository docs instead of the README.
+- 除非确实能显著降低复杂度，否则保持项目无额外依赖。
+- 修改加载方式时，保留 `file://` 打开能力。
+- 优先采用渐进增强，避免依赖过于特定的浏览器行为。
+- 页面文案保持克制、明确、面向最终用户。
+- 不要提交本地示例字幕文件或导出的临时压缩包。
+- `README.md` 主要用于说明项目定位、能力与使用方式。
+- 面向贡献者的流程、规范与维护说明应放在仓库文档中，而不是堆到 README。
 
-## Scope
+## 文档分工
 
-- `README.md` should explain what the project is, how to use it, and where to start.
-- `CONTRIBUTING.md` should explain how to change the project safely.
-- `SECURITY.md` should be the only place for vulnerability reporting guidance.
+- `README.md`：项目介绍、使用方式、入口说明
+- `CONTRIBUTING.md`：贡献流程与开发约束
+- `SECURITY.md`：安全问题反馈方式
+- `CHANGELOG.md`：版本与变更记录
 
-## Before Opening a PR
+## 提交前检查
 
-- Verify the page still works in direct file mode.
-- Check the main flows: import, rename, visual edit, raw edit, single download, ZIP download, and theme toggle.
-- Run `node --check app.js`.
-- Review copy for consistency in tone and language before submitting.
+- 确认页面仍可直接通过 `file://` 使用
+- 检查导入、重命名、可视化编辑、原文编辑、单文件下载、ZIP 下载、主题切换等主流程
+- 运行 `node --check app.js`
+- 检查文案语气、语言和命名是否一致

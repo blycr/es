@@ -1,18 +1,18 @@
-# Security Policy
+# 安全策略
 
-## Supported Versions
+## 支持范围
 
-This project currently supports the latest version on the default branch.
+当前默认分支上的最新版本视为受支持版本。
 
-## Reporting a Vulnerability
+## 如何报告安全问题
 
-Please do not open a public issue for security-sensitive problems.
+请不要在公开 Issue 中提交安全敏感问题。
 
-Contact the maintainer privately first, include:
+建议私下联系维护者，并尽量附带以下信息：
 
-- a short description of the issue
-- reproduction steps
-- affected browser and OS
-- impact assessment if known
+- 问题简述
+- 复现步骤
+- 受影响的浏览器和操作系统
+- 已知影响范围
 
-The maintainer will acknowledge the report and follow up with a fix or mitigation plan.
+维护者会在确认后给出修复或缓解方案。

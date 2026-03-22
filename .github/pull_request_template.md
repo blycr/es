@@ -1,13 +1,13 @@
-## Summary
+## 概要
 
 - 
 
-## Checks
+## 检查项
 
-- [ ] `node --check app.js`
-- [ ] Tested direct `file://` usage
-- [ ] Tested import / edit / download flow
+- [ ] 已运行 `node --check app.js`
+- [ ] 已验证可直接通过 `file://` 使用
+- [ ] 已检查导入、编辑、下载主流程
 
-## Notes
+## 备注
 
 - 

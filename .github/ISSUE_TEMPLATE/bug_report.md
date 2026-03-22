@@ -1,35 +1,35 @@
 ---
-name: Bug report
-about: Report a reproducible problem
-title: "[Bug] "
+name: 问题反馈
+about: 报告一个可复现的问题
+title: "[问题] "
 labels: bug
 assignees: ""
 ---
 
-## Summary
+## 问题概述
 
-Describe the problem clearly.
+请简要描述问题。
 
-## Steps to Reproduce
+## 复现步骤
 
-1. Go to ...
-2. Click ...
-3. See error ...
+1. 打开 ...
+2. 点击 ...
+3. 出现 ...
 
-## Expected Behavior
+## 期望结果
 
-Describe what you expected to happen.
+请描述你期望发生的行为。
 
-## Actual Behavior
+## 实际结果
 
-Describe what actually happened.
+请描述实际发生了什么。
 
-## Environment
+## 运行环境
 
-- OS:
-- Browser:
-- Opened via `file://` or HTTP:
+- 操作系统：
+- 浏览器：
+- 打开方式：`file://` 还是 HTTP：
 
-## Notes
+## 补充信息
 
-Add screenshots, sample data characteristics, or other context if needed.
+如有需要，请补充截图、示例数据特征或其他上下文。

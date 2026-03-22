@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Security reports
+  - name: 安全问题反馈
     url: https://github.com/blycr/es/security/policy
-    about: Please use the security policy for vulnerability reports.
-  - name: Contribution guide
+    about: 涉及安全问题时，请使用安全策略中的方式反馈。
+  - name: 贡献说明
     url: https://github.com/blycr/es/blob/main/CONTRIBUTING.md
-    about: Review the contribution guide before opening changes.
+    about: 提交改动前请先阅读贡献说明。

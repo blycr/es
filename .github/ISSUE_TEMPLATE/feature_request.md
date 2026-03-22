@@ -1,23 +1,23 @@
 ---
-name: Feature request
-about: Suggest an improvement
-title: "[Feature] "
+name: 功能建议
+about: 提出一个改进建议
+title: "[建议] "
 labels: enhancement
 assignees: ""
 ---
 
-## Problem
+## 背景问题
 
-What workflow is currently inconvenient?
+当前哪个使用流程不够方便？
 
-## Proposed Solution
+## 建议方案
 
-Describe the behavior you want.
+请描述你希望增加或调整的行为。
 
-## Alternatives Considered
+## 备选方案
 
-List any alternatives you have already considered.
+如果你已经考虑过其他方案，可以写在这里。
 
-## Additional Context
+## 补充说明
 
-Add mockups, examples, or edge cases if helpful.
+如有示意图、例子或边界情况，请补充说明。

@@ -1,0 +1,54 @@
+name: 部署 GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - index.html
+      - styles.css
+      - app.js
+      - README.md
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 准备静态文件
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+          cp styles.css dist/styles.css
+          cp app.js dist/app.js
+          cp README.md dist/README.md
+
+      - name: 上传 Pages 制品
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: 部署到 Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
