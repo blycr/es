@@ -1,41 +1,54 @@
 # ASS Subtitle Studio
 
-一个纯前端、离线优先的 `.ass` 字幕编辑器。
+ASS Subtitle Studio is a browser-based editor for `.ass` subtitle files.
 
-## 当前功能
+It is designed for local-first editing: files stay on the user's machine, the app works when opened directly with `file://`, and common subtitle maintenance tasks can be handled without a backend.
 
-- 批量导入本地 `.ass` 字幕文件
-- 按编码重新解码：`UTF-8`、`GBK`、`Big5`、`Shift_JIS`、`UTF-16 LE`
-- 直接修改导出文件名
-- 支持浅色 / 夜间模式切换
-- 可视化编辑 `Script Info`
-- 可视化编辑 `Aegisub Project Garbage`
-- 分页编辑 `V4+ Styles`
-- 分页编辑 `Events`
-- 原文模式直接编辑完整 ASS 文本
-- 单文件下载或打包 ZIP 下载
-- 表格列宽会按字段类型自动分配，避免常见字段被硬挤在一起
+## What It Does
 
-## 使用方式
+- Import multiple local `.ass` files
+- Re-decode files with common subtitle encodings
+- Rename output files before export
+- Edit `Script Info` and `Aegisub Project Garbage`
+- Edit `V4+ Styles` and `Events` in paged visual tables
+- Edit the full subtitle text in raw mode
+- Export individual files or download selected files as a ZIP archive
 
-直接打开 [index.html](/c:/Users/blycr/es/index.html) 即可使用。
+## Project Goals
 
-- 兼容直接用 `file://` 协议打开，不依赖本地 HTTP 服务
-- 建议桌面端使用左右工作台布局；移动端会自动切成上下布局
-- 首次进入页面时，上传区会轻微扫光一次，提示可以从这里导入文件
+- Keep the app usable without a local server
+- Preserve a straightforward, dependency-free front end
+- Support large subtitle files without sending content to a remote service
+- Provide a practical editing workflow for metadata, styles, events, and export names
 
-## 页面结构
+## Usage
 
-1. 左侧工作栏放置概览、下载和文件整理
-2. 右侧主编辑区负责字幕内容编辑
-3. 左右区域支持拖拽调宽
+1. Open [index.html](/c:/Users/blycr/es/index.html) in a browser.
+2. Import one or more `.ass` files.
+3. Rename files or edit subtitle content in the visual or raw editor.
+4. Download the selected outputs as individual files or as a ZIP archive.
 
-## 说明
+## Compatibility Notes
 
-- 文件名修改是即时生效的，下载时按当前文件名导出
-- 文件名输入不会因为实时刷新列表而失焦
-- 可视化编辑和原文编辑会作用在同一份当前内容上
-- 大型字幕文件会在 `Styles` 和 `Events` 区域按页展示，减少卡顿
-- ZIP 下载已显式使用 UTF-8 文件名标记，避免中文名乱码
-- 夜间模式使用本地浏览器存储记住选择
-- 所有字体都带有系统字体回退；半透明和模糊效果不可用时会自动回退到普通面板
+- Direct `file://` usage is supported.
+- The app is intended for modern desktop browsers.
+- ZIP exports use UTF-8 file names.
+- Sample subtitle files are ignored by Git and are not part of the repository.
+
+## Repository Structure
+
+- [index.html](/c:/Users/blycr/es/index.html): application shell
+- [styles.css](/c:/Users/blycr/es/styles.css): layout and theme styles
+- [app.js](/c:/Users/blycr/es/app.js): parsing, editing, and export logic
+- [CONTRIBUTING.md](/c:/Users/blycr/es/CONTRIBUTING.md): contribution workflow
+- [SECURITY.md](/c:/Users/blycr/es/SECURITY.md): security reporting guidance
+
+## Development
+
+- Run `node --check app.js` before submitting changes.
+- Keep `file://` compatibility intact when changing loading behavior.
+- Prefer small, readable changes over framework-heavy abstractions.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](/c:/Users/blycr/es/LICENSE).

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security reports
+    url: https://github.com/blycr/es/security/policy
+    about: Please use the security policy for vulnerability reports.
+  - name: Contribution guide
+    url: https://github.com/blycr/es/blob/main/CONTRIBUTING.md
+    about: Review the contribution guide before opening changes.
