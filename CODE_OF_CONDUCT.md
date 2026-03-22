@@ -28,4 +28,4 @@
 
 如果你遇到或观察到不当行为，请私下联系维护者。
 
-涉及安全问题时，请按 [SECURITY.md](/c:/Users/blycr/es/SECURITY.md) 中的方式反馈。
+涉及安全问题时，请按 [SECURITY.md](./SECURITY.md) 中的方式反馈。
