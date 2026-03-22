@@ -23,6 +23,13 @@
 - `SECURITY.md`：安全问题反馈方式
 - `CHANGELOG.md`：版本与变更记录
 
+## 发布与部署
+
+- 仓库已配置 GitHub Pages。
+- 默认在 `main` 分支发生与页面相关的变更时自动触发部署。
+- 也可以在 GitHub Actions 中手动触发 `部署 GitHub Pages` 工作流。
+- 修改发布行为时，请同步检查 `.github/workflows/pages.yml`。
+
 ## 提交前检查
 
 - 确认页面仍可直接通过 `file://` 使用
