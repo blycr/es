@@ -2,6 +2,8 @@ const STYLE_PAGE_SIZE = 20;
 const EVENT_PAGE_SIZE = 50;
 const THEME_STORAGE_KEY = "ass-subtitle-studio-theme";
 const LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-width";
+const LEFT_TOP_LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-top-height";
+const RIGHT_TOP_LAYOUT_STORAGE_KEY = "ass-subtitle-studio-right-top-height";
 const DROPZONE_HINT_KEY = "ass-subtitle-studio-dropzone-hint-seen";
 const EVENT_TYPES = ["Dialogue", "Comment", "Picture", "Sound", "Movie", "Command"];
 const EDITABLE_EVENT_TYPES = ["Dialogue", "Comment"];
@@ -62,6 +64,10 @@ const els = {
   themeToggle: getElement("#theme-toggle"),
   workspaceGrid: getElement("#workspace-grid"),
   workspaceDivider: getElement("#workspace-divider"),
+  workspaceDividerLeft: getElement("#workspace-divider-left"),
+  workspaceDividerRight: getElement("#workspace-divider-right"),
+  workspaceLeft: document.querySelector(".workspace-left"),
+  workspaceRight: document.querySelector(".workspace-right"),
   fileRowTemplate: getElement("#file-row-template"),
 };
 
@@ -145,44 +151,89 @@ function applyTheme(theme) {
 
 function initializeLayout() {
   const storedWidth = Number(localStorage.getItem(LAYOUT_STORAGE_KEY));
+  const storedLeftTopHeight = Number(localStorage.getItem(LEFT_TOP_LAYOUT_STORAGE_KEY));
+  const storedRightTopHeight = Number(localStorage.getItem(RIGHT_TOP_LAYOUT_STORAGE_KEY));
+
   if (Number.isFinite(storedWidth)) {
     applyLeftPanelWidth(storedWidth);
+  }
+  if (Number.isFinite(storedLeftTopHeight)) {
+    applyColumnTopHeight("--left-top-height", storedLeftTopHeight, els.workspaceLeft, 180, 300, LEFT_TOP_LAYOUT_STORAGE_KEY);
+  }
+  if (Number.isFinite(storedRightTopHeight)) {
+    applyColumnTopHeight("--right-top-height", storedRightTopHeight, els.workspaceRight, 150, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
   }
 }
 
 function bindLayoutResize() {
-  if (!els.workspaceDivider) return;
+  bindSplitResize({
+    divider: els.workspaceDivider,
+    onMove(event) {
+      const gridRect = els.workspaceGrid.getBoundingClientRect();
+      applyLeftPanelWidth(event.clientX - gridRect.left, gridRect.width);
+    },
+  });
+
+  bindSplitResize({
+    divider: els.workspaceDividerLeft,
+    onMove(event) {
+      const columnRect = els.workspaceLeft.getBoundingClientRect();
+      applyColumnTopHeight("--left-top-height", event.clientY - columnRect.top, els.workspaceLeft, 180, 320, LEFT_TOP_LAYOUT_STORAGE_KEY);
+    },
+  });
+
+  bindSplitResize({
+    divider: els.workspaceDividerRight,
+    onMove(event) {
+      const columnRect = els.workspaceRight.getBoundingClientRect();
+      applyColumnTopHeight("--right-top-height", event.clientY - columnRect.top, els.workspaceRight, 150, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
+    },
+  });
+}
+
+function bindSplitResize({ divider, onMove }) {
+  if (!divider) return;
 
   let dragging = false;
 
-  const onMove = (event) => {
+  const handleMove = (event) => {
     if (!dragging) return;
-    const gridRect = els.workspaceGrid.getBoundingClientRect();
-    const nextWidth = event.clientX - gridRect.left;
-    applyLeftPanelWidth(nextWidth);
+    onMove(event);
   };
 
   const stopDragging = () => {
     if (!dragging) return;
     dragging = false;
-    els.workspaceDivider.classList.remove("is-dragging");
+    divider.classList.remove("is-dragging");
   };
 
-  els.workspaceDivider.addEventListener("pointerdown", (event) => {
+  divider.addEventListener("pointerdown", (event) => {
     dragging = true;
-    els.workspaceDivider.classList.add("is-dragging");
-    els.workspaceDivider.setPointerCapture(event.pointerId);
+    divider.classList.add("is-dragging");
+    divider.setPointerCapture(event.pointerId);
   });
 
-  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointermove", handleMove);
   window.addEventListener("pointerup", stopDragging);
   window.addEventListener("pointercancel", stopDragging);
 }
 
-function applyLeftPanelWidth(rawWidth) {
-  const clampedWidth = Math.max(260, Math.min(420, Math.round(rawWidth)));
+function applyLeftPanelWidth(rawWidth, gridWidth = els.workspaceGrid.getBoundingClientRect().width) {
+  const minWidth = 220;
+  const maxWidth = Math.max(minWidth, Math.min(760, Math.round(gridWidth - 380)));
+  const clampedWidth = Math.max(minWidth, Math.min(maxWidth, Math.round(rawWidth)));
   document.documentElement.style.setProperty("--left-panel-width", `${clampedWidth}px`);
   localStorage.setItem(LAYOUT_STORAGE_KEY, String(clampedWidth));
+}
+
+function applyColumnTopHeight(variableName, rawHeight, columnElement, minHeight, minBottomHeight, storageKey) {
+  if (!columnElement) return;
+
+  const availableHeight = columnElement.getBoundingClientRect().height;
+  const maxHeight = Math.max(minHeight, Math.round(availableHeight - minBottomHeight));
+  const clampedHeight = Math.max(minHeight, Math.min(maxHeight, Math.round(rawHeight)));
+  document.documentElement.style.setProperty(variableName, `${clampedHeight}px`);
+  localStorage.setItem(storageKey, String(clampedHeight));
 }
 
 function initDropzone() {
