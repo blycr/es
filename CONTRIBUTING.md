@@ -22,6 +22,7 @@
 - `CONTRIBUTING.md`：贡献流程与开发约束
 - `SECURITY.md`：安全问题反馈方式
 - `CHANGELOG.md`：版本与变更记录
+- `TODO.md`：尚未实现但已整理成型的功能规划
 
 ## 发布与部署
 
