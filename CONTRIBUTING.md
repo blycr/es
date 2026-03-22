@@ -29,6 +29,10 @@
 - 默认在 `main` 分支发生与页面相关的变更时自动触发部署。
 - 也可以在 GitHub Actions 中手动触发 `部署 GitHub Pages` 工作流。
 - 修改发布行为时，请同步检查 `.github/workflows/pages.yml`。
+- 仓库已配置自动 Release 工作流。
+- 当前版本策略采用 `v0.1.x` 递增：首次发布为 `v0.1.0`，之后在自动发布时递增补丁号。
+- Release 默认在 `main` 分支发生核心文件变更后自动创建，也支持手动触发。
+- 修改发布策略时，请同步检查 `.github/workflows/release.yml`。
 
 ## 提交前检查
 

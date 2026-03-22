@@ -1,0 +1,94 @@
+name: 发布 Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - index.html
+      - styles.css
+      - app.js
+      - README.md
+      - CHANGELOG.md
+      - LICENSE
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 计算版本号
+        id: version
+        shell: bash
+        run: |
+          latest_tag="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
+
+          if [ -z "$latest_tag" ]; then
+            next_version="v0.1.0"
+            previous_ref="$(git rev-list --max-parents=0 HEAD)"
+          else
+            version_core="${latest_tag#v}"
+            IFS='.' read -r major minor patch <<< "$version_core"
+            next_patch=$((patch + 1))
+            next_version="v${major}.${minor}.${next_patch}"
+            previous_ref="$latest_tag"
+          fi
+
+          {
+            echo "latest_tag=$latest_tag"
+            echo "previous_ref=$previous_ref"
+            echo "next_version=$next_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 生成发布说明
+        shell: bash
+        run: |
+          previous_ref="${{ steps.version.outputs.previous_ref }}"
+          next_version="${{ steps.version.outputs.next_version }}"
+
+          {
+            echo "# ${next_version}"
+            echo
+            echo "## 变更摘要"
+            git log --pretty=format:'- %s' "${previous_ref}..HEAD"
+          } > RELEASE_NOTES.md
+
+      - name: 准备发布包
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.next_version }}"
+          mkdir -p dist
+          cp index.html dist/index.html
+          cp styles.css dist/styles.css
+          cp app.js dist/app.js
+          cp README.md dist/README.md
+          cp LICENSE dist/LICENSE
+          (
+            cd dist
+            zip -r "../ass-subtitle-studio-${version}.zip" .
+          )
+
+      - name: 创建 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.version.outputs.next_version }}" \
+            "ass-subtitle-studio-${{ steps.version.outputs.next_version }}.zip" \
+            --target "${GITHUB_SHA}" \
+            --title "${{ steps.version.outputs.next_version }}" \
+            --notes-file RELEASE_NOTES.md
