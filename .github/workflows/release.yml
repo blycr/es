@@ -8,6 +8,7 @@ on:
       - index.html
       - styles.css
       - app.js
+      - scripts/build-single-file.js
       - README.md
       - CHANGELOG.md
       - LICENSE
@@ -67,6 +68,10 @@ jobs:
             git log --pretty=format:'- %s' "${previous_ref}..HEAD"
           } > RELEASE_NOTES.md
 
+      - name: 生成单文件版
+        shell: bash
+        run: node scripts/build-single-file.js
+
       - name: 准备发布包
         shell: bash
         run: |
@@ -77,6 +82,7 @@ jobs:
           cp app.js dist/app.js
           cp README.md dist/README.md
           cp LICENSE dist/LICENSE
+          mv dist/ass-subtitle-studio-single-file.html "ass-subtitle-studio-single-file-${version}.html"
           (
             cd dist
             zip -r "../ass-subtitle-studio-${version}.zip" .
@@ -89,6 +95,7 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.next_version }}" \
             "ass-subtitle-studio-${{ steps.version.outputs.next_version }}.zip" \
+            "ass-subtitle-studio-single-file-${{ steps.version.outputs.next_version }}.html" \
             --target "${GITHUB_SHA}" \
             --title "${{ steps.version.outputs.next_version }}" \
             --notes-file RELEASE_NOTES.md

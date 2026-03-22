@@ -14,3 +14,4 @@ yarn-error.log*
 # Temporary archives / exports
 *.zip
 *.tmp
+dist/

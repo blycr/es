@@ -8,6 +8,7 @@
 
 - 增加 GitHub Pages 工作流，支持静态部署
 - 增加自动发布 GitHub Release 的工作流
+- 增加 Release 单文件 HTML 构建与发布
 - 增加 `CHANGELOG.md`
 - 增加 `TODO.md`，整理后续 AI 编辑功能规划
 - 增加行为准则、代码所有者与 Issue 配置文件
