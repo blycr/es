@@ -126,6 +126,12 @@ textarea {
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
+select:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
 textarea {
   resize: vertical;
 }
@@ -288,8 +294,11 @@ input[type="checkbox"]:checked::before {
 .hero-card {
   padding: 18px;
   display: grid;
-  align-content: center;
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+  align-content: stretch;
   gap: 10px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .hero-actions {
@@ -335,6 +344,9 @@ body[data-theme="dark"] .hero-card {
 
 .preview-panel {
   min-height: calc(100vh - 88px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .dropzone {
@@ -457,7 +469,9 @@ body[data-theme="dark"] .hero-card {
 }
 
 .preview-content {
-  max-height: calc(100vh - 190px);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
   padding-right: 6px;
   scrollbar-width: thin;
@@ -470,6 +484,9 @@ body[data-theme="dark"] .hero-card {
   background: transparent;
   color: var(--muted);
   border: 1px dashed var(--soft-border);
+  text-align: center;
+  justify-items: center;
+  align-content: center;
 }
 
 .file-row,
@@ -485,6 +502,19 @@ body[data-theme="dark"] .hero-card {
 
 .hero-card .result-list {
   margin-top: 4px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+
+.result-items {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .file-row {
@@ -525,6 +555,12 @@ textarea:focus {
   flex-wrap: wrap;
   grid-column: 2;
   justify-self: start;
+}
+
+.pager-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .file-meta,
@@ -703,6 +739,8 @@ textarea:focus {
   width: 100%;
   margin-top: 16px;
   border: 0;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .preview-card th,

@@ -1,5 +1,7 @@
 const STYLE_PAGE_SIZE = 20;
 const EVENT_PAGE_SIZE = 50;
+const RESULT_PAGE_SIZE_DESKTOP = 4;
+const RESULT_PAGE_SIZE_MOBILE = 3;
 const THEME_STORAGE_KEY = "ass-subtitle-studio-theme";
 const LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-width";
 const LEFT_TOP_LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-top-height";
@@ -40,6 +42,7 @@ const state = {
     styles: new Map(),
     events: new Map(),
   },
+  resultPage: 0,
 };
 
 const els = {
@@ -93,6 +96,8 @@ function renderApp() {
 }
 
 function bindEvents() {
+  let resizeFrameId = 0;
+
   els.fileInput.addEventListener("change", (event) => handleFileList(event.target.files));
   els.encodingSelect.addEventListener("change", (event) => {
     state.decodeEncoding = event.target.value;
@@ -120,6 +125,13 @@ function bindEvents() {
   els.downloadSelected.addEventListener("click", downloadSelectedFiles);
   els.downloadZip.addEventListener("click", downloadZipForSelected);
   els.themeToggle.addEventListener("click", toggleTheme);
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(resizeFrameId);
+    resizeFrameId = requestAnimationFrame(() => {
+      renderResults();
+      renderPreview();
+    });
+  });
   bindLayoutResize();
 }
 
@@ -205,6 +217,8 @@ function bindSplitResize({ divider, onMove }) {
     if (!dragging) return;
     dragging = false;
     divider.classList.remove("is-dragging");
+    renderResults();
+    renderPreview();
   };
 
   divider.addEventListener("pointerdown", (event) => {
@@ -506,11 +520,14 @@ function renderFiles() {
   els.activeFileSelect.innerHTML = "";
 
   if (!state.files.length) {
+    els.activeFileSelect.disabled = true;
+    els.activeFileSelect.innerHTML = '<option value="">暂无可编辑文件</option>';
     els.fileList.className = "file-list empty-state";
     els.fileList.innerHTML = "<p>还没有导入文件。</p>";
     return;
   }
 
+  els.activeFileSelect.disabled = false;
   els.fileList.className = "file-list";
   for (const file of state.files) {
     const node = els.fileRowTemplate.content.firstElementChild.cloneNode(true);
@@ -940,7 +957,7 @@ function buildPager(page, totalPages, onPageChange) {
   const wrap = document.createElement("div");
   wrap.className = "pager";
   const left = document.createElement("div");
-  left.className = "file-actions";
+  left.className = "pager-actions";
   const prev = document.createElement("button");
   prev.className = "ghost small";
   prev.textContent = "上一页";
@@ -1071,13 +1088,23 @@ function renderResults() {
   els.resultList.innerHTML = "";
   const selected = state.files.filter((file) => file.selected);
   if (!selected.length) {
+    state.resultPage = 0;
     els.resultList.className = "result-list empty-state";
     els.resultList.innerHTML = "<p>勾选文件后，这里会列出下载项。</p>";
     return;
   }
 
+  const pageSize = getResultPageSize();
+  const totalPages = Math.max(1, Math.ceil(selected.length / pageSize));
+  const currentPage = Math.min(state.resultPage, totalPages - 1);
+  const visibleFiles = selected.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+
+  state.resultPage = currentPage;
   els.resultList.className = "result-list";
-  selected.forEach((file) => {
+  const itemsWrap = document.createElement("div");
+  itemsWrap.className = "result-items";
+
+  visibleFiles.forEach((file) => {
     const card = document.createElement("article");
     card.className = "result-card";
     const header = document.createElement("header");
@@ -1093,8 +1120,33 @@ function renderResults() {
     meta.className = "result-meta";
     meta.textContent = `${formatBytes(new Blob([file.outputText]).size)} · ${file.stats.styleCount} styles · ${file.stats.eventCount} events`;
     card.append(header, meta);
-    els.resultList.appendChild(card);
+    itemsWrap.appendChild(card);
   });
+
+  els.resultList.appendChild(itemsWrap);
+
+  if (totalPages > 1) {
+    els.resultList.appendChild(
+      buildPager(currentPage, totalPages, (nextPage) => {
+        state.resultPage = nextPage;
+        renderResults();
+      })
+    );
+  }
+}
+
+function getResultPageSize() {
+  const fallbackPageSize = window.matchMedia("(max-width: 760px)").matches ? RESULT_PAGE_SIZE_MOBILE : RESULT_PAGE_SIZE_DESKTOP;
+  const listHeight = els.resultList.getBoundingClientRect().height;
+  if (listHeight <= 0) {
+    return fallbackPageSize;
+  }
+
+  const estimatedPagerHeight = 42;
+  const estimatedCardHeight = window.matchMedia("(max-width: 760px)").matches ? 96 : 88;
+  const availableHeight = Math.max(estimatedCardHeight, listHeight - estimatedPagerHeight);
+  const fitCount = Math.floor((availableHeight + 10) / (estimatedCardHeight + 10));
+  return Math.max(1, Math.min(fallbackPageSize, fitCount || 1));
 }
 
 function downloadSelectedFiles() {
