@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASS Subtitle Studio</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230969da'/%3E%3Cpath d='M16 18h32v6H16zm0 11h32v6H16zm0 11h20v6H16z' fill='white'/%3E%3Ccircle cx='44' cy='43' r='6' fill='%233fb950'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="workspace-grid" id="workspace-grid">
+        <div class="workspace-column workspace-left">
+          <section class="hero-card">
+            <div class="hero-brand">
+              <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+                <rect width="64" height="64" rx="14" fill="currentColor"></rect>
+                <path d="M16 18h32v6H16zm0 11h32v6H16zm0 11h20v6H16z" fill="white"></path>
+                <circle cx="44" cy="43" r="6" fill="var(--accent)"></circle>
+              </svg>
+              <div>
+                <strong>ASS Subtitle Studio</strong>
+                <div class="preview-meta">本地字幕编辑台</div>
+              </div>
+            </div>
+            <div class="stat-row"><span>处理模式</span><strong>离线优先</strong></div>
+            <div class="stat-row"><span>大文件策略</span><strong>摘要 + 抽样</strong></div>
+            <div class="stat-row"><span>批量下载</span><strong>ZIP / 单文件</strong></div>
+            <div class="hero-actions">
+              <button id="download-selected" class="ghost">下载所选文件</button>
+              <button id="download-zip" class="ghost">下载 ZIP</button>
+              <button id="theme-toggle" class="ghost">切换夜间模式</button>
+            </div>
+            <div id="result-list" class="result-list empty-state"><p>勾选文件后，这里会列出可下载结果。</p></div>
+          </section>
+
+          <section class="panel upload-panel">
+            <div class="panel-heading">
+              <h2>1. 导入字幕</h2>
+              <p>可一次上传多个 `.ass` 文件；支持重命名、删除、重新按编码解码。</p>
+            </div>
+            <div class="dropzone" id="dropzone">
+              <input id="file-input" type="file" accept=".ass" multiple />
+              <p>拖入字幕文件，或点击选择</p>
+              <span>建议 UTF-8；如乱码可切换 `GBK` / `Big5` 重新解码</span>
+            </div>
+            <div class="toolbar">
+              <label class="stack">
+                <span>导入编码</span>
+                <select id="encoding-select">
+                  <option value="utf-8">UTF-8</option>
+                  <option value="gbk">GBK / GB18030</option>
+                  <option value="big5">Big5</option>
+                  <option value="shift_jis">Shift_JIS</option>
+                  <option value="utf-16le">UTF-16 LE</option>
+                </select>
+              </label>
+              <button id="reload-encoding" class="ghost">按当前编码重新解码所有文件</button>
+              <button id="remove-selected-files" class="ghost">删除所选文件</button>
+              <button id="clear-files" class="ghost">清空全部文件</button>
+              <button id="load-samples" class="ghost">加载示例提示</button>
+            </div>
+            <div id="file-list" class="file-list empty-state"><p>还没有导入文件。</p></div>
+          </section>
+        </div>
+
+        <div class="workspace-divider" id="workspace-divider" role="separator" aria-orientation="vertical" aria-label="调整左右面板宽度"></div>
+
+        <div class="workspace-column workspace-right">
+          <section class="hero-copy">
+            <p class="eyebrow">Subtitle Workspace</p>
+            <h1>本地字幕文件的智能批量修改台</h1>
+            <p class="hero-text">
+              批量整理字幕元数据、样式、事件内容和导出文件名，支持可视化编辑、原文编辑与批量导出。
+            </p>
+          </section>
+
+          <section class="panel preview-panel">
+            <div class="panel-heading">
+              <h2>2. 直接编辑</h2>
+              <p>选中文件后直接改内容；文件名在左侧列表内直接改，保存即反映到导出结果。</p>
+            </div>
+            <div class="toolbar">
+              <label class="stack grow">
+                <span>当前活动文件</span>
+                <select id="active-file-select"></select>
+              </label>
+              <button id="preview-visual-mode" class="ghost">可视化编辑</button>
+              <button id="preview-raw-mode" class="ghost">原文编辑</button>
+              <button id="save-raw-editor" class="ghost">保存原文改动</button>
+              <button id="copy-summary" class="ghost">复制结构摘要</button>
+            </div>
+            <textarea id="raw-editor" class="code-block hidden" rows="16" spellcheck="false"></textarea>
+            <div id="preview-content" class="preview-content empty-state"><p>导入文件后会显示这里。</p></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <template id="file-row-template">
+      <div class="file-row">
+        <input type="checkbox" class="file-checkbox" checked />
+        <div class="file-main">
+          <input class="file-name-input" />
+          <span class="file-meta"></span>
+        </div>
+        <div class="file-actions">
+          <button class="ghost small file-activate" type="button">预览</button>
+          <button class="ghost small file-remove" type="button">删除</button>
+        </div>
+      </div>
+    </template>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

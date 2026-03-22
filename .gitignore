@@ -1,0 +1,16 @@
+*.ass
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary archives / exports
+*.zip
+*.tmp
