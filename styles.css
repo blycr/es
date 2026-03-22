@@ -383,12 +383,6 @@ body[data-theme="dark"] .hero-card {
   margin-top: 12px;
 }
 
-.upload-toolbar,
-.preview-toolbar .stack {
-  min-width: 0;
-  width: 100%;
-}
-
 .upload-toolbar {
   display: grid;
   gap: 10px;

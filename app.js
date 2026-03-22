@@ -3,6 +3,31 @@ const EVENT_PAGE_SIZE = 50;
 const THEME_STORAGE_KEY = "ass-subtitle-studio-theme";
 const LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-width";
 const DROPZONE_HINT_KEY = "ass-subtitle-studio-dropzone-hint-seen";
+const EVENT_TYPES = ["Dialogue", "Comment", "Picture", "Sound", "Movie", "Command"];
+const EDITABLE_EVENT_TYPES = ["Dialogue", "Comment"];
+const COMPACT_COLUMN_KEYS = new Set([
+  "fontsize",
+  "spacing",
+  "angle",
+  "outline",
+  "shadow",
+  "marginl",
+  "marginr",
+  "marginv",
+  "layer",
+  "encoding",
+  "alignment",
+  "bold",
+  "italic",
+  "underline",
+  "strikeout",
+  "scalex",
+  "scaley",
+  "borderstyle",
+]);
+const MEDIUM_COLUMN_KEYS = new Set(["effect", "actor", "marked"]);
+
+let activeToast = null;
 
 const state = {
   files: [],
@@ -16,27 +41,28 @@ const state = {
 };
 
 const els = {
-  fileInput: document.querySelector("#file-input"),
-  dropzone: document.querySelector("#dropzone"),
-  encodingSelect: document.querySelector("#encoding-select"),
-  reloadEncoding: document.querySelector("#reload-encoding"),
-  removeSelectedFiles: document.querySelector("#remove-selected-files"),
-  clearFiles: document.querySelector("#clear-files"),
-  loadSamples: document.querySelector("#load-samples"),
-  fileList: document.querySelector("#file-list"),
-  activeFileSelect: document.querySelector("#active-file-select"),
-  previewContent: document.querySelector("#preview-content"),
-  rawEditor: document.querySelector("#raw-editor"),
-  previewVisualMode: document.querySelector("#preview-visual-mode"),
-  previewRawMode: document.querySelector("#preview-raw-mode"),
-  saveRawEditor: document.querySelector("#save-raw-editor"),
-  copySummary: document.querySelector("#copy-summary"),
-  resultList: document.querySelector("#result-list"),
-  downloadSelected: document.querySelector("#download-selected"),
-  downloadZip: document.querySelector("#download-zip"),
-  themeToggle: document.querySelector("#theme-toggle"),
-  workspaceGrid: document.querySelector("#workspace-grid"),
-  workspaceDivider: document.querySelector("#workspace-divider"),
+  fileInput: getElement("#file-input"),
+  dropzone: getElement("#dropzone"),
+  encodingSelect: getElement("#encoding-select"),
+  reloadEncoding: getElement("#reload-encoding"),
+  removeSelectedFiles: getElement("#remove-selected-files"),
+  clearFiles: getElement("#clear-files"),
+  loadSamples: getElement("#load-samples"),
+  fileList: getElement("#file-list"),
+  activeFileSelect: getElement("#active-file-select"),
+  previewContent: getElement("#preview-content"),
+  rawEditor: getElement("#raw-editor"),
+  previewVisualMode: getElement("#preview-visual-mode"),
+  previewRawMode: getElement("#preview-raw-mode"),
+  saveRawEditor: getElement("#save-raw-editor"),
+  copySummary: getElement("#copy-summary"),
+  resultList: getElement("#result-list"),
+  downloadSelected: getElement("#download-selected"),
+  downloadZip: getElement("#download-zip"),
+  themeToggle: getElement("#theme-toggle"),
+  workspaceGrid: getElement("#workspace-grid"),
+  workspaceDivider: getElement("#workspace-divider"),
+  fileRowTemplate: getElement("#file-row-template"),
 };
 
 bindEvents();
@@ -44,9 +70,21 @@ initializeTheme();
 initializeLayout();
 initDropzone();
 initializeDropzoneHint();
-renderFiles();
-renderPreview();
-renderResults();
+renderApp();
+
+function getElement(selector) {
+  const element = document.querySelector(selector);
+  if (!element) {
+    throw new Error(`缺少必要元素: ${selector}`);
+  }
+  return element;
+}
+
+function renderApp() {
+  renderFiles();
+  renderPreview();
+  renderResults();
+}
 
 function bindEvents() {
   els.fileInput.addEventListener("change", (event) => handleFileList(event.target.files));
@@ -91,9 +129,7 @@ function copyActiveFileSummary() {
     showToast("请先选一个活动文件。");
     return;
   }
-  navigator.clipboard.writeText(JSON.stringify(buildFileSummary(file), null, 2)).then(() => {
-    showToast("结构摘要已复制。");
-  });
+  copyText(JSON.stringify(buildFileSummary(file), null, 2), "结构摘要已复制。", "结构摘要复制失败。");
 }
 
 function toggleTheme() {
@@ -190,21 +226,24 @@ async function handleFileList(fileList) {
     return;
   }
 
-  for (const file of incoming) {
-    const parsedFile = await loadAssFile(file, state.decodeEncoding);
-    const existingIndex = state.files.findIndex((item) => item.name === file.name);
-    if (existingIndex >= 0) {
-      state.files[existingIndex] = parsedFile;
-    } else {
-      state.files.push(parsedFile);
-    }
-  }
+  try {
+    const loadedFiles = await Promise.all(incoming.map((file) => loadAssFile(file, state.decodeEncoding)));
 
-  normalizeActiveFile();
-  renderFiles();
-  renderPreview();
-  renderResults();
-  showToast(`已导入 ${incoming.length} 个字幕文件。`);
+    loadedFiles.forEach((parsedFile) => {
+      const existingIndex = state.files.findIndex((item) => item.name === parsedFile.name);
+      if (existingIndex >= 0) {
+        state.files[existingIndex] = parsedFile;
+      } else {
+        state.files.push(parsedFile);
+      }
+    });
+
+    normalizeActiveFile();
+    renderApp();
+    showToast(`已导入 ${incoming.length} 个字幕文件。`);
+  } catch (error) {
+    showToast(`导入失败: ${error.message}`);
+  }
 }
 
 async function reloadAllFilesWithEncoding() {
@@ -213,12 +252,14 @@ async function reloadAllFilesWithEncoding() {
     return;
   }
 
-  state.files = await Promise.all(state.files.map((item) => loadAssFile(item.originalFile, state.decodeEncoding, item)));
-  normalizeActiveFile();
-  renderFiles();
-  renderPreview();
-  renderResults();
-  showToast(`已使用 ${state.decodeEncoding} 重新解码。`);
+  try {
+    state.files = await Promise.all(state.files.map((item) => loadAssFile(item.originalFile, state.decodeEncoding, item)));
+    normalizeActiveFile();
+    renderApp();
+    showToast(`已使用 ${state.decodeEncoding} 重新解码。`);
+  } catch (error) {
+    showToast(`重新解码失败: ${error.message}`);
+  }
 }
 
 function removeSelectedFiles() {
@@ -228,9 +269,7 @@ function removeSelectedFiles() {
   }
   state.files = state.files.filter((file) => !file.selected);
   normalizeActiveFile();
-  renderFiles();
-  renderPreview();
-  renderResults();
+  renderApp();
 }
 
 function clearAllFiles() {
@@ -238,9 +277,7 @@ function clearAllFiles() {
   state.activeFileId = null;
   state.previewPages.styles.clear();
   state.previewPages.events.clear();
-  renderFiles();
-  renderPreview();
-  renderResults();
+  renderApp();
 }
 
 function normalizeActiveFile() {
@@ -369,7 +406,7 @@ function parseEventsSection(section) {
     }
 
     const [, eventType, payload] = match;
-    if (!["Dialogue", "Comment", "Picture", "Sound", "Movie", "Command"].includes(eventType)) {
+    if (!EVENT_TYPES.includes(eventType)) {
       extras.push({ type: "raw", raw: line });
       continue;
     }
@@ -424,10 +461,8 @@ function renderFiles() {
   }
 
   els.fileList.className = "file-list";
-  const template = document.querySelector("#file-row-template");
-
   for (const file of state.files) {
-    const node = template.content.firstElementChild.cloneNode(true);
+    const node = els.fileRowTemplate.content.firstElementChild.cloneNode(true);
     const checkbox = node.querySelector(".file-checkbox");
     const nameInput = node.querySelector(".file-name-input");
     const metaEl = node.querySelector(".file-meta");
@@ -461,9 +496,7 @@ function renderFiles() {
       state.previewPages.styles.delete(file.id);
       state.previewPages.events.delete(file.id);
       normalizeActiveFile();
-      renderFiles();
-      renderPreview();
-      renderResults();
+      renderApp();
     });
 
     els.fileList.appendChild(node);
@@ -684,7 +717,7 @@ function buildEditableEventsPreview(file) {
     columns.forEach((column) => {
       if (column === "eventType") {
         const select = document.createElement("select");
-        ["Dialogue", "Comment"].forEach((type) => {
+        EDITABLE_EVENT_TYPES.forEach((type) => {
           const option = document.createElement("option");
           option.value = type;
           option.textContent = type;
@@ -759,10 +792,8 @@ function getColumnMetrics(columnName, sectionType) {
   if (key === "start" || key === "end") return { width: 124, kind: "time" };
   if (key === "eventtype") return { width: 124, kind: "type" };
   if (key.includes("colour") || key.includes("color")) return { width: 168, kind: "color" };
-  if (key === "fontsize" || key === "spacing" || key === "angle" || key === "outline" || key === "shadow" || key === "marginl" || key === "marginr" || key === "marginv" || key === "layer" || key === "encoding" || key === "alignment" || key === "bold" || key === "italic" || key === "underline" || key === "strikeout" || key === "scalex" || key === "scaley" || key === "borderstyle") {
-    return { width: 104, kind: "compact" };
-  }
-  if (key === "effect" || key === "actor" || key === "marked") return { width: 140, kind: "compact" };
+  if (COMPACT_COLUMN_KEYS.has(key)) return { width: 104, kind: "compact" };
+  if (MEDIUM_COLUMN_KEYS.has(key)) return { width: 140, kind: "compact" };
   return { width: 140, kind: "default" };
 }
 
@@ -772,6 +803,12 @@ function initializeScrollableTables() {
 }
 
 function enhanceScrollableTable(wrap) {
+  if (wrap.dataset.enhanced === "1") {
+    updateScrollableTableState(wrap);
+    return;
+  }
+
+  wrap.dataset.enhanced = "1";
   updateScrollableTableState(wrap);
 
   wrap.addEventListener(
@@ -1139,6 +1176,8 @@ function escapeHtml(text) {
 }
 
 function showToast(message) {
+  activeToast?.remove();
+
   const toast = document.createElement("div");
   toast.textContent = message;
   toast.style.position = "fixed";
@@ -1152,5 +1191,35 @@ function showToast(message) {
   toast.style.color = "#eff6ff";
   toast.style.boxShadow = "0 18px 42px rgba(0,0,0,0.18)";
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2400);
+  activeToast = toast;
+  setTimeout(() => {
+    if (activeToast === toast) {
+      activeToast = null;
+    }
+    toast.remove();
+  }, 2400);
+}
+
+async function copyText(text, successMessage, failureMessage) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "true");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) {
+        throw new Error("copy command failed");
+      }
+    }
+    showToast(successMessage);
+  } catch {
+    showToast(failureMessage);
+  }
 }
