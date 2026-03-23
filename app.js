@@ -33,6 +33,7 @@ const COMPACT_COLUMN_KEYS = new Set([
 const MEDIUM_COLUMN_KEYS = new Set(["effect", "actor", "marked"]);
 
 let activeToast = null;
+let scrollTopIdleTimer = 0;
 
 // All runtime UI state stays here so visual editing, raw editing and export
 // always operate on the same in-memory source of truth.
@@ -69,6 +70,7 @@ const els = {
   downloadSelected: getElement("#download-selected"),
   downloadZip: getElement("#download-zip"),
   themeToggle: getElement("#theme-toggle"),
+  scrollTopButton: getElement("#scroll-top-button"),
   workspaceGrid: getElement("#workspace-grid"),
   workspaceDivider: getElement("#workspace-divider"),
   workspaceDividerLeft: getElement("#workspace-divider-left"),
@@ -84,6 +86,7 @@ initializeLayout();
 initDropzone();
 initializeDropzoneHint();
 renderApp();
+updateScrollTopButtonVisibility();
 
 // DOM bootstrap helpers
 function getElement(selector) {
@@ -131,13 +134,26 @@ function bindEvents() {
   els.downloadSelected.addEventListener("click", downloadSelectedFiles);
   els.downloadZip.addEventListener("click", downloadZipForSelected);
   els.themeToggle.addEventListener("click", toggleTheme);
+  els.scrollTopButton.addEventListener("click", scrollToTop);
+  els.scrollTopButton.addEventListener("pointerenter", () => {
+    window.clearTimeout(scrollTopIdleTimer);
+    els.scrollTopButton.classList.remove("is-idle");
+  });
   window.addEventListener("resize", () => {
     cancelAnimationFrame(resizeFrameId);
     resizeFrameId = requestAnimationFrame(() => {
       renderResults();
       renderPreview();
+      updateScrollTopButtonVisibility();
     });
   });
+  window.addEventListener(
+    "scroll",
+    () => {
+      updateScrollTopButtonVisibility(true);
+    },
+    { passive: true }
+  );
   bindLayoutResize();
 }
 
@@ -171,6 +187,35 @@ function applyTheme(theme) {
   els.themeToggle.textContent = theme === "dark" ? "切换浅色模式" : "切换夜间模式";
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function updateScrollTopButtonVisibility(fromScroll = false) {
+  const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const shouldShow = scrollableHeight > 240 && window.scrollY > 260;
+
+  els.scrollTopButton.classList.toggle("is-visible", shouldShow);
+
+  if (!shouldShow) {
+    window.clearTimeout(scrollTopIdleTimer);
+    els.scrollTopButton.classList.remove("is-idle");
+    return;
+  }
+
+  if (!fromScroll) {
+    return;
+  }
+
+  els.scrollTopButton.classList.remove("is-idle");
+  window.clearTimeout(scrollTopIdleTimer);
+  scrollTopIdleTimer = window.setTimeout(() => {
+    if (window.scrollY > 260) {
+      els.scrollTopButton.classList.add("is-idle");
+    }
+  }, 1100);
+}
+
 function initializeLayout() {
   const storedWidth = Number(localStorage.getItem(LAYOUT_STORAGE_KEY));
   const storedLeftTopHeight = Number(localStorage.getItem(LEFT_TOP_LAYOUT_STORAGE_KEY));
@@ -183,7 +228,7 @@ function initializeLayout() {
     applyColumnTopHeight("--left-top-height", storedLeftTopHeight, els.workspaceLeft, 180, 300, LEFT_TOP_LAYOUT_STORAGE_KEY);
   }
   if (Number.isFinite(storedRightTopHeight)) {
-    applyColumnTopHeight("--right-top-height", storedRightTopHeight, els.workspaceRight, 150, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
+    applyColumnTopHeight("--right-top-height", storedRightTopHeight, els.workspaceRight, 220, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
   }
 }
 
@@ -208,7 +253,7 @@ function bindLayoutResize() {
     divider: els.workspaceDividerRight,
     onMove(event) {
       const columnRect = els.workspaceRight.getBoundingClientRect();
-      applyColumnTopHeight("--right-top-height", event.clientY - columnRect.top, els.workspaceRight, 150, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
+      applyColumnTopHeight("--right-top-height", event.clientY - columnRect.top, els.workspaceRight, 220, 320, RIGHT_TOP_LAYOUT_STORAGE_KEY);
     },
   });
 }
