@@ -9,6 +9,9 @@
 - 增加 GitHub Pages 工作流，支持静态部署
 - 增加自动发布 GitHub Release 的工作流
 - 增加 Release 单文件 HTML 构建与发布
+- 增加 `CODEMAP.md`，用于说明项目结构、数据流与关键函数职责
+- 增加 `FUNCTION_MAP.md`，用于说明函数职责、调用关系与改动入口
+- 增加 `ROADMAP.md`，作为正式路线图文档
 - 增加 `CHANGELOG.md`
 - 增加 `TODO.md`，整理后续 AI 编辑功能规划
 - 增加行为准则、代码所有者与 Issue 配置文件
@@ -20,6 +23,8 @@
 - 在 README 显眼位置补充 GitHub Pages 访问入口，并整理文档导航结构
 - 明确版本号采用 `v0.1.x` 的自动递增规则
 - 收紧 README 中与仓库运维相关的描述，使首页更聚焦当前可用功能
+- 为 Events 增加按时间范围整体提前或延后的时轴快调工具
+- 将 `TODO.md` 调整为兼容入口，正式规划迁移到 `ROADMAP.md`
 
 ## [2026-03-23]
 

@@ -2,6 +2,7 @@ const STYLE_PAGE_SIZE = 20;
 const EVENT_PAGE_SIZE = 50;
 const RESULT_PAGE_SIZE_DESKTOP = 4;
 const RESULT_PAGE_SIZE_MOBILE = 3;
+const UI_ANIMATION_DURATION = 240;
 const THEME_STORAGE_KEY = "ass-subtitle-studio-theme";
 const LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-width";
 const LEFT_TOP_LAYOUT_STORAGE_KEY = "ass-subtitle-studio-left-top-height";
@@ -33,6 +34,8 @@ const MEDIUM_COLUMN_KEYS = new Set(["effect", "actor", "marked"]);
 
 let activeToast = null;
 
+// All runtime UI state stays here so visual editing, raw editing and export
+// always operate on the same in-memory source of truth.
 const state = {
   files: [],
   activeFileId: null,
@@ -42,6 +45,7 @@ const state = {
     styles: new Map(),
     events: new Map(),
   },
+  timelineTools: new Map(),
   resultPage: 0,
 };
 
@@ -81,6 +85,7 @@ initDropzone();
 initializeDropzoneHint();
 renderApp();
 
+// DOM bootstrap helpers
 function getElement(selector) {
   const element = document.querySelector(selector);
   if (!element) {
@@ -95,6 +100,7 @@ function renderApp() {
   renderResults();
 }
 
+// Global event wiring
 function bindEvents() {
   let resizeFrameId = 0;
 
@@ -152,7 +158,11 @@ function copyActiveFileSummary() {
 
 function toggleTheme() {
   const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
+  document.body.classList.add("theme-switching");
   applyTheme(nextTheme);
+  window.setTimeout(() => {
+    document.body.classList.remove("theme-switching");
+  }, UI_ANIMATION_DURATION + 60);
 }
 
 function applyTheme(theme) {
@@ -375,6 +385,7 @@ async function loadAssFile(file, encoding, previous = null) {
   };
 }
 
+// ASS parsing
 function parseAss(text) {
   const normalized = text.replace(/\r\n/g, "\n");
   const lines = normalized.split("\n");
@@ -392,6 +403,8 @@ function parseAss(text) {
     }
   }
 
+  // Keep the original section order so stringifyAss can round-trip the file
+  // without reshuffling blocks that the user did not edit.
   const sectionMap = new Map(sections.map((section) => [section.name, section]));
   return {
     lineCount: lines.length,
@@ -489,6 +502,8 @@ function splitAssFields(text, count) {
   if (!count) return [text];
   const parts = [];
   let buffer = "";
+  // ASS stores the last field as a free-form tail. We only split the first
+  // count - 1 commas so dialogue text and similar payloads stay intact.
   for (let i = 0; i < text.length; i += 1) {
     const char = text[i];
     if (char === "," && parts.length < count - 1) {
@@ -503,6 +518,166 @@ function splitAssFields(text, count) {
   return parts.map((item) => item.trim());
 }
 
+// Timeline batch editing helpers
+function getTimelineToolState(fileId) {
+  if (!state.timelineTools.has(fileId)) {
+    state.timelineTools.set(fileId, {
+      rangeStart: "",
+      rangeEnd: "",
+      offsetSeconds: "0.30",
+      direction: "later",
+      matchMode: "start",
+    });
+  }
+  return state.timelineTools.get(fileId);
+}
+
+function parseFlexibleTimeToCentiseconds(value) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return null;
+
+  if (/^-?\d+(?:\.\d+)?$/.test(normalized)) {
+    return Math.round(Number(normalized) * 100);
+  }
+
+  const colonLike = normalized
+    .replace(/，/g, ",")
+    .replace(/：/g, ":")
+    .replace(/,/g, ".")
+    .replace(/\s+/g, "");
+
+  const directMatch = colonLike.match(/^(-)?(\d+):(\d{1,2}):(\d{1,2})(?:\.(\d{1,2}))?$/);
+  if (directMatch) {
+    const [, sign = "", hours, minutes, seconds, centiseconds = "0"] = directMatch;
+    return buildCentiseconds(sign === "-", Number(hours), Number(minutes), Number(seconds), Number(centiseconds.padEnd(2, "0").slice(0, 2)));
+  }
+
+  const dottedMatch = colonLike.match(/^(-)?(\d{1,2})\.(\d{1,2})\.(\d{1,2})$/);
+  if (dottedMatch) {
+    const [, sign = "", minutes, seconds, centiseconds] = dottedMatch;
+    return buildCentiseconds(sign === "-", 0, Number(minutes), Number(seconds), Number(centiseconds));
+  }
+
+  return null;
+}
+
+function buildCentiseconds(isNegative, hours, minutes, seconds, centiseconds) {
+  if ([hours, minutes, seconds, centiseconds].some((part) => !Number.isFinite(part))) {
+    return null;
+  }
+  const total = (((hours * 60 + minutes) * 60 + seconds) * 100) + centiseconds;
+  return isNegative ? -total : total;
+}
+
+function parseAssTimestamp(value) {
+  const match = String(value ?? "").trim().match(/^(\d+):(\d{1,2}):(\d{1,2})\.(\d{1,2})$/);
+  if (!match) return null;
+  const [, hours, minutes, seconds, centiseconds] = match;
+  return buildCentiseconds(false, Number(hours), Number(minutes), Number(seconds), Number(centiseconds));
+}
+
+function formatAssTimestamp(totalCentiseconds) {
+  const safeValue = Math.max(0, Math.round(totalCentiseconds));
+  const hours = Math.floor(safeValue / 360000);
+  const minutes = Math.floor((safeValue % 360000) / 6000);
+  const seconds = Math.floor((safeValue % 6000) / 100);
+  const centiseconds = safeValue % 100;
+  return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
+}
+
+function applyTimelineShift(file) {
+  const eventsSection = file.parsed.events;
+  if (!eventsSection?.rows?.length) {
+    showToast("当前文件没有可调整的事件时轴。");
+    return;
+  }
+
+  const toolState = getTimelineToolState(file.id);
+  const rangeStart = parseFlexibleTimeToCentiseconds(toolState.rangeStart);
+  const rangeEnd = parseFlexibleTimeToCentiseconds(toolState.rangeEnd);
+  const offsetBase = parseFlexibleTimeToCentiseconds(toolState.offsetSeconds);
+
+  if (rangeStart === null || rangeEnd === null) {
+    showToast("请输入有效的起止时间。可用 0:00:00.00 或 00.00.00。");
+    return;
+  }
+
+  if (offsetBase === null || offsetBase === 0) {
+    showToast("请输入有效的偏移量，且不能为 0。");
+    return;
+  }
+
+  const normalizedStart = Math.min(rangeStart, rangeEnd);
+  const normalizedEnd = Math.max(rangeStart, rangeEnd);
+  const signedOffset = toolState.direction === "earlier" ? -Math.abs(offsetBase) : Math.abs(offsetBase);
+
+  let affectedCount = 0;
+  let clampedCount = 0;
+  let skippedInvalidCount = 0;
+
+  eventsSection.rows.forEach((row) => {
+    const startTime = parseAssTimestamp(row.data.Start);
+    const endTime = parseAssTimestamp(row.data.End);
+
+    if (startTime === null || endTime === null) {
+      skippedInvalidCount += 1;
+      return;
+    }
+
+    if (endTime < startTime) {
+      skippedInvalidCount += 1;
+      return;
+    }
+
+    const isMatched =
+      toolState.matchMode === "overlap"
+        ? endTime >= normalizedStart && startTime <= normalizedEnd
+        : startTime >= normalizedStart && startTime <= normalizedEnd;
+
+    if (!isMatched) {
+      return;
+    }
+
+    const duration = endTime - startTime;
+    const shiftedStart = startTime + signedOffset;
+    // Negative timestamps are invalid in ASS. When a bulk shift crosses zero,
+    // clamp the start and preserve duration so timing stays internally valid.
+    const nextStart = Math.max(0, shiftedStart);
+    const nextEnd = nextStart + duration;
+
+    if (shiftedStart < 0) {
+      clampedCount += 1;
+    }
+
+    if (nextStart === startTime && nextEnd === endTime) {
+      return;
+    }
+
+    row.data.Start = formatAssTimestamp(nextStart);
+    row.data.End = formatAssTimestamp(nextEnd);
+    affectedCount += 1;
+  });
+
+  if (!affectedCount) {
+    if (skippedInvalidCount > 0) {
+      showToast("没有完成调整：命中的事件里存在无法识别的时间格式。");
+      return;
+    }
+    showToast("没有命中可调整的事件。");
+    return;
+  }
+
+  syncFileOutput(file);
+  renderPreview();
+
+  const detail = [];
+  if (clampedCount > 0) detail.push(`${clampedCount} 条已贴齐 0 秒`);
+  if (skippedInvalidCount > 0) detail.push(`${skippedInvalidCount} 条因时间格式异常被跳过`);
+
+  showToast(detail.length ? `已调整 ${affectedCount} 条事件；${detail.join("，")}。` : `已调整 ${affectedCount} 条事件的时轴。`);
+}
+
+// Derived metadata
 function summarizeParsedAss(parsed, text) {
   return {
     bytes: new Blob([text]).size,
@@ -515,6 +690,7 @@ function summarizeParsedAss(parsed, text) {
   };
 }
 
+// File list and preview rendering
 function renderFiles() {
   els.fileList.innerHTML = "";
   els.activeFileSelect.innerHTML = "";
@@ -772,6 +948,8 @@ function buildEditableEventsPreview(file) {
     </header>
   `;
 
+  const timelineTool = buildTimelineTool(file);
+
   const wrap = document.createElement("div");
   wrap.className = "editor-table-wrap";
   const table = document.createElement("table");
@@ -813,10 +991,135 @@ function buildEditableEventsPreview(file) {
 
   table.appendChild(tbody);
   wrap.appendChild(table);
-  card.append(buildPager(page, totalPages, (nextPage) => setCurrentPage("events", file.id, nextPage)), wrap, buildPager(page, totalPages, (nextPage) => setCurrentPage("events", file.id, nextPage)));
+  card.append(
+    timelineTool,
+    buildPager(page, totalPages, (nextPage) => setCurrentPage("events", file.id, nextPage)),
+    wrap,
+    buildPager(page, totalPages, (nextPage) => setCurrentPage("events", file.id, nextPage))
+  );
   return card;
 }
 
+function buildTimelineTool(file) {
+  const toolState = getTimelineToolState(file.id);
+  const tool = document.createElement("section");
+  tool.className = "timeline-tool";
+
+  const title = document.createElement("div");
+  title.className = "timeline-tool-header";
+  title.innerHTML = `
+    <strong>时轴快调</strong>
+    <span class="preview-meta">适合做整段提前 / 延后，默认按开始时间匹配范围。</span>
+  `;
+
+  const fields = document.createElement("div");
+  fields.className = "timeline-tool-fields";
+
+  const startLabel = buildTimelineField("起始时间", "例如 00.00.00 或 0:00:00.00");
+  const startInput = startLabel.querySelector("input");
+  startInput.value = toolState.rangeStart;
+  startInput.addEventListener("input", () => {
+    toolState.rangeStart = startInput.value;
+  });
+
+  const endField = buildTimelineField("结束时间", "例如 01.24.23 或 0:01:24.23");
+  const endFieldInput = endField.querySelector("input");
+  endFieldInput.value = toolState.rangeEnd;
+  endFieldInput.addEventListener("input", () => {
+    toolState.rangeEnd = endFieldInput.value;
+  });
+
+  const offsetField = buildTimelineField("偏移秒数", "输入 0.3、0.30 或 00.30");
+  const offsetInput = offsetField.querySelector("input");
+  offsetInput.value = toolState.offsetSeconds;
+  offsetInput.addEventListener("input", () => {
+    toolState.offsetSeconds = offsetInput.value;
+  });
+
+  const directionLabel = document.createElement("label");
+  directionLabel.className = "stack";
+  directionLabel.innerHTML = "<span>方向</span>";
+  const directionSelect = document.createElement("select");
+  [
+    ["later", "整体延后"],
+    ["earlier", "整体提前"],
+  ].forEach(([value, text]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    option.selected = toolState.direction === value;
+    directionSelect.appendChild(option);
+  });
+  directionSelect.addEventListener("change", () => {
+    toolState.direction = directionSelect.value;
+  });
+  directionLabel.appendChild(directionSelect);
+
+  const matchLabel = document.createElement("label");
+  matchLabel.className = "stack";
+  matchLabel.innerHTML = "<span>命中方式</span>";
+  const matchSelect = document.createElement("select");
+  [
+    ["start", "开始时间落入范围"],
+    ["overlap", "与范围相交"],
+  ].forEach(([value, text]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    option.selected = toolState.matchMode === value;
+    matchSelect.appendChild(option);
+  });
+  matchSelect.addEventListener("change", () => {
+    toolState.matchMode = matchSelect.value;
+  });
+  matchLabel.appendChild(matchSelect);
+
+  fields.append(startLabel, endField, offsetField, directionLabel, matchLabel);
+
+  const actions = document.createElement("div");
+  actions.className = "timeline-tool-actions";
+
+  [
+    ["0.10", "0.1s"],
+    ["0.30", "0.3s"],
+    ["0.50", "0.5s"],
+    ["1.00", "1.0s"],
+  ].forEach(([value, text]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "ghost small";
+    chip.textContent = text;
+    chip.addEventListener("click", () => {
+      toolState.offsetSeconds = value;
+      offsetInput.value = value;
+    });
+    actions.appendChild(chip);
+  });
+
+  const applyButton = document.createElement("button");
+  applyButton.type = "button";
+  applyButton.className = "ghost";
+  applyButton.textContent = "应用到命中事件";
+  applyButton.addEventListener("click", () => applyTimelineShift(file));
+  actions.appendChild(applyButton);
+
+  tool.append(title, fields, actions);
+  return tool;
+}
+
+function buildTimelineField(labelText, placeholder) {
+  const label = document.createElement("label");
+  label.className = "stack";
+  const title = document.createElement("span");
+  title.textContent = labelText;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = placeholder;
+  label.append(title, input);
+  return label;
+}
+
+// Table layout and interaction helpers
 function createCell(node, columnName = "", sectionType = "") {
   const td = document.createElement("td");
   const metrics = getColumnMetrics(columnName, sectionType);
@@ -985,7 +1288,10 @@ function setCurrentPage(kind, fileId, page) {
   renderPreview();
 }
 
+// Synchronization between structured state and export text
 function syncFileOutput(file) {
+  // Every structured edit eventually flows through this function so preview,
+  // raw editor and download output remain synchronized.
   file.outputText = stringifyAss(file.parsed);
   file.stats = summarizeParsedAss(file.parsed, file.outputText);
   if (state.previewMode === "raw" && file.id === state.activeFileId) {
@@ -1084,6 +1390,7 @@ function buildFileSummary(file) {
   };
 }
 
+// Export and download
 function renderResults() {
   els.resultList.innerHTML = "";
   const selected = state.files.filter((file) => file.selected);
@@ -1194,6 +1501,8 @@ function createZipBlob(entries) {
   const localFiles = [];
   const centralDirectory = [];
   let offset = 0;
+  // Setting the UTF-8 flag keeps non-ASCII subtitle file names readable after
+  // extraction on mainstream archive tools.
   const utf8Flag = 0x0800;
 
   entries.forEach((entry) => {
@@ -1243,6 +1552,7 @@ function createZipBlob(entries) {
 }
 
 function crc32(bytes) {
+  // ZIP requires CRC32 in both local headers and central directory records.
   let crc = 0xffffffff;
   for (let i = 0; i < bytes.length; i += 1) {
     crc ^= bytes[i];
@@ -1254,6 +1564,7 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+// Misc utilities
 function getActiveFile() {
   return state.files.find((file) => file.id === state.activeFileId) ?? null;
 }
@@ -1282,24 +1593,17 @@ function showToast(message) {
   activeToast?.remove();
 
   const toast = document.createElement("div");
+  toast.className = "app-toast";
   toast.textContent = message;
-  toast.style.position = "fixed";
-  toast.style.right = "16px";
-  toast.style.bottom = "16px";
-  toast.style.zIndex = "9999";
-  toast.style.maxWidth = "320px";
-  toast.style.padding = "12px 14px";
-  toast.style.borderRadius = "14px";
-  toast.style.background = "rgba(15, 23, 42, 0.92)";
-  toast.style.color = "#eff6ff";
-  toast.style.boxShadow = "0 18px 42px rgba(0,0,0,0.18)";
   document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("is-visible"));
   activeToast = toast;
   setTimeout(() => {
     if (activeToast === toast) {
       activeToast = null;
     }
-    toast.remove();
+    toast.classList.remove("is-visible");
+    window.setTimeout(() => toast.remove(), UI_ANIMATION_DURATION);
   }, 2400);
 }
 

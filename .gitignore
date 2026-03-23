@@ -4,6 +4,14 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
 
 # Logs
 *.log
@@ -15,3 +23,8 @@ yarn-error.log*
 *.zip
 *.tmp
 dist/
+
+# Local QA / coverage
+coverage/
+tmp/
+temp/

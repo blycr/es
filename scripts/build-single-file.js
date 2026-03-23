@@ -12,6 +12,9 @@ const indexHtml = fs.readFileSync(indexPath, "utf8");
 const stylesCss = fs.readFileSync(stylesPath, "utf8");
 const appJs = fs.readFileSync(scriptPath, "utf8");
 
+// Keep the Release single-file build intentionally simple: inline the current
+// static assets instead of introducing a bundler that would complicate local
+// maintenance or break file:// usage assumptions.
 const inlinedCss = `<style>\n${stylesCss}\n</style>`;
 const safeScript = appJs.replace(/<\/script/gi, "<\\/script");
 const inlinedJs = `<script>\n${safeScript}\n</script>`;

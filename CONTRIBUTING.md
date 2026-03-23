@@ -22,7 +22,10 @@
 - `CONTRIBUTING.md`：贡献流程与开发约束
 - `SECURITY.md`：安全问题反馈方式
 - `CHANGELOG.md`：版本与变更记录
-- `TODO.md`：尚未实现但已整理成型的功能规划
+- `CODEMAP.md`：项目结构、数据流与关键实现地图
+- `FUNCTION_MAP.md`：函数职责、调用关系与改动入口
+- `ROADMAP.md`：正式的中长期功能路线图
+- `TODO.md`：兼容入口，避免旧链接失效
 
 ## 发布与部署
 
