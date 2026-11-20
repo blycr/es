@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
   --left-panel-width: 300px;
-  --left-top-height: 300px;
+  --left-top-height: 360px;
   --right-top-height: 240px;
   --page-max-width: 1120px;
   --bg: #f4f1ea;
@@ -166,6 +166,17 @@ button.ghost:hover {
   box-shadow: 0 8px 18px rgba(37, 42, 51, 0.08);
 }
 
+button.ghost.active {
+  background: var(--primary);
+  color: #f8fafc;
+  border-color: var(--primary);
+}
+
+button.ghost.active:hover {
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+}
+
 button.small {
   padding: 0.45rem 0.85rem;
 }
@@ -305,10 +316,15 @@ input[type="checkbox"]:checked::before {
 }
 
 .workspace-divider:hover::before,
+.workspace-divider:focus-visible::before,
 .workspace-divider.is-dragging::before {
   background: var(--primary);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
   transform: translateX(-50%) scaleY(1.05);
+}
+
+.workspace-divider:focus-visible {
+  outline: none;
 }
 
 .workspace-divider-horizontal::before {
@@ -323,6 +339,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .workspace-divider-horizontal:hover::before,
+.workspace-divider-horizontal:focus-visible::before,
 .workspace-divider-horizontal.is-dragging::before {
   transform: translateY(-50%) scaleX(1.05);
 }
@@ -620,6 +637,14 @@ body[data-theme="dark"] .hero-card {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
+.file-row.is-active {
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--glass-inline-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--primary) 3%, transparent)),
+    var(--glass-surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
 .hero-card .result-list {
   margin-top: 4px;
   min-height: 0;
@@ -726,6 +751,59 @@ textarea:focus {
 }
 
 .timeline-tool-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbox-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbox-tab-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbox-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dirty-badge {
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+body[data-theme="dark"] .dirty-badge {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.row-actions-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.row-actions-group button {
+  white-space: nowrap;
+}
+
+.preview-card-header-right {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -852,6 +930,10 @@ textarea:focus {
 .app-toast.is-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+body.has-scroll-top .app-toast {
+  bottom: 74px;
 }
 
 .scroll-top-button {

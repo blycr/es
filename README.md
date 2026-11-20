@@ -13,13 +13,14 @@ ASS 字幕编辑器是一个用于编辑 `.ass` 字幕文件的浏览器端工�
 
 ## 核心能力
 
-- 批量导入本地 `.ass` 字幕文件
-- 按常见字幕编码重新解码文件
+- 批量导入本地 `.ass` 字幕文件（支持 BOM 自动识别与乱码提示）
+- 按常见字幕编码重新解码文件（含 UTF-8 / GBK / Big5 / Shift_JIS / UTF-16 LE / UTF-16 BE）
 - 在导出前修改输出文件名
 - 编辑 `Script Info` 与 `Aegisub Project Garbage`
-- 以分页表格方式编辑 `V4+ Styles` 与 `Events`
-- 对指定时间范围内的 `Events` 执行整段提前或延后
-- 以原文模式直接编辑完整字幕文本
+- 以分页表格方式编辑 `V4+ Styles` 与 `Events`（支持展开全部列、新增/复制/删除行）
+- 对 `Events` 执行按关键词/样式/类型筛选、批量查找替换（支持正则）与时轴整段提前/延后
+- 支持编辑历史撤销与重做（`Ctrl+Z` / `Ctrl+Shift+Z`）
+- 以原文模式直接编辑完整字幕文本（含未保存提醒与 `Ctrl+S` 快捷保存）
 - 单文件导出或将所选文件打包为 ZIP 下载
 
 ## 项目特点
@@ -62,10 +63,10 @@ ASS 字幕编辑器是一个用于编辑 `.ass` 字幕文件的浏览器端工�
 
 ## 开发说明
 
-- 提交前运行 `node --check app.js`
+- 提交前运行 `node --check app.js`、`node --check scripts/build-single-file.js` 与 `node --test`
 - 修改加载逻辑时保留 `file://` 兼容性
 - 优先保持实现直接、清晰、易维护
-- 当前仓库已配置 GitHub Pages 和自动 Release 工作流，相关规则见 [CONTRIBUTING.md](./CONTRIBUTING.md)
+- 当前仓库已配置 GitHub Pages、质量检查与自动 Release 工作流，相关规则见 [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 许可证
 

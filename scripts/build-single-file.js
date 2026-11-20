@@ -1,41 +1,51 @@
 const fs = require("fs");
 const path = require("path");
 
-const rootDir = path.resolve(__dirname, "..");
-const outputDir = path.join(rootDir, "dist");
+function buildSingleFileHtml(indexHtml, stylesCss, appJs) {
+  // Escape closing tags inside inlined blocks so embedded CSS/JS cannot break out
+  // of <style> or <script> tags in the generated single-file HTML.
+  const safeCss = stylesCss.replace(/<\/style/gi, "<\\/style");
+  const safeScript = appJs.replace(/<\/script/gi, "<\\/script");
+  const inlinedCss = `<style>\n${safeCss}\n</style>`;
+  const inlinedJs = `<script>\n${safeScript}\n</script>`;
 
-const indexPath = path.join(rootDir, "index.html");
-const stylesPath = path.join(rootDir, "styles.css");
-const scriptPath = path.join(rootDir, "app.js");
+  const stylesheetPattern = /<link\s+rel="stylesheet"\s+href="\.\/styles\.css"\s*\/?>/;
+  const scriptPattern = /<script\s+src="\.\/app\.js"\s+defer><\/script>/;
 
-const indexHtml = fs.readFileSync(indexPath, "utf8");
-const stylesCss = fs.readFileSync(stylesPath, "utf8");
-const appJs = fs.readFileSync(scriptPath, "utf8");
+  if (!stylesheetPattern.test(indexHtml)) {
+    throw new Error("未找到 styles.css 的引用标签，请检查 index.html。");
+  }
 
-// Keep the Release single-file build intentionally simple: inline the current
-// static assets instead of introducing a bundler that would complicate local
-// maintenance or break file:// usage assumptions.
-const inlinedCss = `<style>\n${stylesCss}\n</style>`;
-const safeScript = appJs.replace(/<\/script/gi, "<\\/script");
-const inlinedJs = `<script>\n${safeScript}\n</script>`;
+  if (!scriptPattern.test(indexHtml)) {
+    throw new Error("未找到 app.js 的引用标签，请检查 index.html。");
+  }
 
-const stylesheetPattern = /<link\s+rel="stylesheet"\s+href="\.\/styles\.css"\s*\/?>/;
-const scriptPattern = /<script\s+src="\.\/app\.js"\s+defer><\/script>/;
-
-if (!stylesheetPattern.test(indexHtml)) {
-  throw new Error("未找到 styles.css 的引用标签，请检查 index.html。");
+  // Use replacer functions so literal `$&`, `$1`, `$$`, etc. in CSS/JS are never
+  // interpreted as String.prototype.replace backreferences.
+  let mergedHtml = indexHtml.replace(stylesheetPattern, () => inlinedCss);
+  mergedHtml = mergedHtml.replace(scriptPattern, () => inlinedJs);
+  return mergedHtml;
 }
 
-if (!scriptPattern.test(indexHtml)) {
-  throw new Error("未找到 app.js 的引用标签，请检查 index.html。");
+function runBuild(rootDir = path.resolve(__dirname, "..")) {
+  const outputDir = path.join(rootDir, "dist");
+  const indexHtml = fs.readFileSync(path.join(rootDir, "index.html"), "utf8");
+  const stylesCss = fs.readFileSync(path.join(rootDir, "styles.css"), "utf8");
+  const appJs = fs.readFileSync(path.join(rootDir, "app.js"), "utf8");
+
+  const mergedHtml = buildSingleFileHtml(indexHtml, stylesCss, appJs);
+  const outputPath = path.join(outputDir, "ass-subtitle-studio-single-file.html");
+
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.writeFileSync(outputPath, mergedHtml, "utf8");
+  return outputPath;
 }
 
-let mergedHtml = indexHtml.replace(stylesheetPattern, inlinedCss);
-mergedHtml = mergedHtml.replace(scriptPattern, inlinedJs);
+if (require.main === module) {
+  runBuild();
+}
 
-fs.mkdirSync(outputDir, { recursive: true });
-fs.writeFileSync(
-  path.join(outputDir, "ass-subtitle-studio-single-file.html"),
-  mergedHtml,
-  "utf8"
-);
+module.exports = {
+  buildSingleFileHtml,
+  runBuild,
+};

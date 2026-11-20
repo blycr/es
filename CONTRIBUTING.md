@@ -43,5 +43,5 @@
 
 - 确认页面仍可直接通过 `file://` 使用
 - 检查导入、重命名、可视化编辑、原文编辑、单文件下载、ZIP 下载、主题切换等主流程
-- 运行 `node --check app.js`
+- 运行 `node --check app.js`、`node --check scripts/build-single-file.js` 与 `node --test`
 - 检查文案语气、语言和命名是否一致

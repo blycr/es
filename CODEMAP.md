@@ -50,10 +50,14 @@
 - `app.js`
   应用主逻辑，包含状态管理、事件绑定、字幕解析、预览构建、导出和辅助工具
 
-### 构建与发布
+### 构建、测试与发布
 
 - `scripts/build-single-file.js`
   将 `index.html`、`styles.css`、`app.js` 合并为单文件 HTML，用于 Release 附件
+- `tests/app.test.js`、`tests/build.test.js`
+  基于 Node 内置 `node:test` 的零依赖单元测试，覆盖解析/回写、时轴、筛选替换、编码/BOM、ZIP/CRC32 与单文件构建
+- `.github/workflows/ci.yml`
+  语法检查、单元测试与单文件构建验证工作流
 - `.github/workflows/pages.yml`
   GitHub Pages 自动部署工作流
 - `.github/workflows/release.yml`
@@ -565,7 +569,7 @@
 ### 约束
 
 - `app.js` 已经承担过多职责，继续扩展时需要控制函数边界
-- 当前没有测试体系，回归主要依赖手工验证
+- 核心纯函数已通过 `node:test` 覆盖，但 DOM 交互仍需结合浏览器手工验证
 - 解析层是“轻结构化”而非严格 AST，对极端 ASS 变体要保持谨慎
 - 渲染是手写局部刷新，新增功能时要格外注意重渲染副作用
 
